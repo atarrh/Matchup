@@ -16,6 +16,7 @@ You'll also need a redirect URL and the client.php file (one of the 'includes'
 in the index file, which I'm hesitant to put on git).  Get in touch with me for
 more deets.
 
-
+One more item - you'll need the google calendar API - spring for the 
+[client library for PHP] (https://developers.google.com/google-apps/calendar/downloads).
 
 
