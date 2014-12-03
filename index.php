@@ -1,7 +1,7 @@
 <?php
 
 // Require the google php client code to make our lives easier
-require_once 'google-api-php-client-master/autoload.php';
+require_once 'google-api-php-client/autoload.php';
 
 // Start a PHP session to allow storing of variables in _SESSION array;
 // required for persistent logins

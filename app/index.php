@@ -1,6 +1,6 @@
 <?php
 
-require_once '../google-api-php-client-master/autoload.php';
+require_once '../google-api-php-client/autoload.php';
 
 session_start();
 
