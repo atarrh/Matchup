@@ -1,28 +1,6 @@
 <?php
 
-require_once '../google-api-php-client/autoload.php';
-
-session_start();
-
-// Initialize the client across stages of authorization; insert data from
-// Google developer console
-include("../client.php");
-include("functions.php");
-
-$logout_url = 'http://' . $_SERVER['HTTP_HOST'] . '/~atarrh/Matchup/app/logout.php';
-
-// If a user isn't logged in, redirect them to the main page:
-if (isset($_SESSION['access_token']) && $_SESSION['access_token']) {
-    $client->setAccessToken($_SESSION['access_token']);
-} else {
-    header('Location: ' . filter_var($logout_url, FILTER_SANITIZE_URL));
-}
-
-// Important code
-$service = new Google_Service_Calendar($client);
-$calendar = $service->calendars->get('primary');
-$email = $calendar->getSummary();
-date_default_timezone_set('America/New_York');
+include('set_environment.php');
 
 // Database crap to test if a user was on the waiting list
 include("connect.php");
@@ -88,19 +66,9 @@ if (mysql_close($dbhandle)) {
             include("connect.php");
 
             if ($consent == 'yes') {
-                // $query = "SELECT * FROM waiting WHERE other_email = '$email';";
-                $query = "UPDATE waiting SET consent=1 WHERE other_email = '$email';";
-                $query_update = mysql_query($query);
-
-                // echo "<p>query was: $query</p>";
-
-                if (!$query_update) {
-                    die("update query failed!");
-                }
-                
+               
                 // Then yank events and insert into DB
                 echo "<p>now must insert events into db</p>";
-
 
                 $minTime = new DateTime($day . " 00:00:00");
                 $maxTime = new DateTime($day . " 23:59:59");
@@ -112,8 +80,6 @@ if (mysql_close($dbhandle)) {
                 $event_list = $service->events->listEvents('primary', $params);
                 $events = $event_list->getItems();
                 get_events($events, $event_list, $day, $email);
-
-                // echo "<h3>Try'na meet at +$length</h3>";
 
                 $suggested_start = $request_date->format('Y/m/d H:i:s');
                 $duration = new DateInterval('PT' . $length[0] . 'H' . $length[1] . 'M' . $length[2] . 'S');
@@ -127,7 +93,7 @@ if (mysql_close($dbhandle)) {
                 $query_events = mysql_query($query);
 
                 // echo "<p>Query was: $query</p>";
-                if ($query_events) {
+                if (mysql_num_rows($query_events) > 0) { 
                     echo "<p>Sorry, you had a conflict with the following event(s):</p>";
 
                     echo "<ul>";
@@ -164,6 +130,7 @@ if (mysql_close($dbhandle)) {
                       </tr>
                     </table>
                     <input type="hidden" name="day" value="<?php echo $day; ?>">
+                    <input type="hidden" name="other" value="<?php echo $user; ?>">
                     </form>
                     
                     <?php
@@ -171,20 +138,34 @@ if (mysql_close($dbhandle)) {
                 } else {
                     echo "<p>There were no conflicts.</p>";
                     echo "<p>Would you like to accept the event / add it to your calendar?</p>";
-                }
 
                 // After events yanked, logout?
                 // I think not; better to make a 'success' page
 
+                ?>
+                <!-- Insert stupid simple form here -->
+                <form action='success.php' method='POST'>
+                    <input type='radio' name='success' value='yes' checked />
+                        <label for = 'yes'>yes</label>
+                    <input type='radio' name='success' value='no' />
+                        <label for = 'no'>no</label>
+                    <input type='submit' name='submit' value='submit' />
+                    <input type='hidden' name='start' value="<?php echo $suggested_start; ?>">
+                    <input type='hidden' name='end' value="<?php echo $suggested_end; ?>">
+                </form>
+
+                <?php
+
+                }
 
             // Otherwise, consent was not granted.
             } else {
 
                 // some stuff
+                echo "<h2>Awwww... We'll delete the request. Have a good day!</h2>";
                 $query = "UPDATE waiting SET rejected=1 WHERE other_email = '$email';";
                 $query_update = mysql_query($query);
-
-    
+ 
             }
 
             if (!mysql_close($dbhandle)) {
@@ -193,8 +174,6 @@ if (mysql_close($dbhandle)) {
         }
 
         ?>
-
-
 
 
     </body>

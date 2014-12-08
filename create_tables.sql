@@ -9,7 +9,7 @@ CREATE TABLE waiting (
     other_email VARCHAR(255),
     request_date VARCHAR(255),
     request_length VARCHAR(255),
-    consent BOOLEAN,
+    accepted BOOLEAN,
     rejected BOOLEAN
 );
 

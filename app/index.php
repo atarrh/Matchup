@@ -1,28 +1,6 @@
 <?php
 
-require_once '../google-api-php-client/autoload.php';
-
-session_start();
-
-// Initialize the client across stages of authorization; insert data from
-// Google developer console
-include("../client.php");
-include("functions.php");
-
-$logout_url = 'http://' . $_SERVER['HTTP_HOST'] . '/~atarrh/Matchup/app/logout.php';
-$consent_url = 'http://' . $_SERVER['HTTP_HOST'] . '/~atarrh/Matchup/app/consent.php';
-
-// If a user isn't logged in, redirect them to the main page:
-if (isset($_SESSION['access_token']) && $_SESSION['access_token']) {
-    $client->setAccessToken($_SESSION['access_token']);
-} else {
-    header('Location: ' . filter_var($logout_url, FILTER_SANITIZE_URL));
-}
-
-// Important code            
-$service = new Google_Service_Calendar($client);
-$calendar = $service->calendars->get('primary');
-$email = $calendar->getSummary();
+include('set_environment.php');
 
 // Database crap to test if a user was on the waiting list
 include("connect.php");
@@ -33,14 +11,12 @@ $query_waiting = mysql_query($query);
 // If a user is being waited on, redirect them to the consent page!
 if (!(mysql_num_rows($query_waiting) == 0)) {
     header('Location: ' . filter_var($consent_url, FILTER_SANITIZE_URL));
-    // die("You are being waited on!");
 } 
 
 if (!mysql_close($dbhandle)) {
     die("Database could not be successfully closed");
 }
  
-
 ?>
 
 
@@ -116,21 +92,27 @@ if (!mysql_close($dbhandle)) {
 
                     // Handling inserting into waiting table
                     echo "<ul>";
-                    foreach ($others as $other) {
+                    for ($i = 0; $i < count($others); $i++) {
                         // Adds domain to emails that do not contain it.
+                        $other = $others[$i];
                         if (!strpos($other, '@')) {
-                            $other = $other . "@gmail.com";
+                            $others[$i] = $other . "@gmail.com";
                         }
-                        $query = "INSERT INTO waiting (user_email, other_email, request_date, consent, rejected) " .
-                            "VALUES ( '$email', '$other', '$day', false, false )";
-                        $query_waiting = mysql_query($query);
-                        if ($query_waiting) {
-                            echo "<li>Other is $other</li>";
-                        } else {
-                            echo mysql_error();
-                        }
+
+                        echo "<li>Other is $other</li>";
+
+                        // $query = "INSERT INTO waiting (user_email, other_email, request_date, consent, rejected) " .
+                        //     "VALUES ( '$email', '$other', '$day', false, false )";
+                        // $query_waiting = mysql_query($query);
+                        // if ($query_waiting) {
+                        // } else {
+                        //     echo mysql_error();
+                        // }
                     }
                     echo "</ul>";
+                    $others = implode(",", $others);
+
+
 
                     // echo "<p>event_list is of type " . gettype($event_list->getItems()) . "...</p>";
                     // echo "<p>Length of event_list: " . sizeof($event_list->getItems()) . "...</p>";
@@ -176,6 +158,7 @@ if (!mysql_close($dbhandle)) {
               </tr>
             </table>
             <input type="hidden" name="day" value="<?php echo $day; ?>">
+            <input type="hidden" name="other" value="<?php echo $others; ?>">
             </form>
 
             <?php
