@@ -38,12 +38,8 @@ if (!(mysql_num_rows($query_waiting) == 0)) {
     // die("query was nonzero");
 } 
 
-// else {
-//     die($email);
-// }
-
-if (mysql_close($dbhandle)) {
-    // echo "<p>Database successfully closed~</p>";
+if (!mysql_close($dbhandle)) {
+    die("Database could not be successfully closed");
 }
  
 
@@ -77,16 +73,8 @@ if (mysql_close($dbhandle)) {
 
                 echo "<a href= $logout_url >Click here to logout of Matchup!!!</a>";
 
-                // Important code            
-                $service  = new Google_Service_Calendar($client);
-                $calendar = $service->calendars->get('primary');
-                $email = $calendar->getSummary();
-
                 // Print the primary calendar title to make sure we're not crazy
                 echo "<h3>Primary calendar title: $email</h3>";
-
-                // echo "<p>type: " . gettype($someStr) . "; length: " . strlen($someStr) . "</p>";
-                // var_dump($_POST);
 
                 if (isset($_POST['submit'])) {
                     echo "<h3>Waiting for other users to respond...</h3>";
@@ -146,14 +134,15 @@ if (mysql_close($dbhandle)) {
                     }
                     echo "</ul>";
 
-                    echo "<p>event_list is of type " . gettype($event_list->getItems()) . "...</p>";
-                    echo "<p>Length of event_list: " . sizeof($event_list->getItems()) . "...</p>";
+                    // echo "<p>event_list is of type " . gettype($event_list->getItems()) . "...</p>";
+                    // echo "<p>Length of event_list: " . sizeof($event_list->getItems()) . "...</p>";
                     include("connect.php");
 
                     $uid = uniqid(true);
-                    $query = "INSERT INTO users (id, email) VALUES ( '$uid', '$email' )";
+                    $query = "INSERT INTO users (user_uid, user_email) " .
+                                "VALUES ( '$uid', '$email' )";
                     // Commented out the query for now, to reduce clutter
-                    // $query_user = mysql_query($query);
+                    $query_user = mysql_query($query);
 
                     // Debugging query strings - turns out you need quotes
                     // around your variables....
@@ -198,6 +187,7 @@ if (mysql_close($dbhandle)) {
 
                                 if (!$query_event) {
                                     echo "<p>failed to insert event $ev_name!!!</p>";
+                                    echo mysql_error();
                                 }
 
 
@@ -246,8 +236,6 @@ if (mysql_close($dbhandle)) {
             </form>
 
             <?php
-
-                    }
 
                 } else {
                     // Silly hack; use mixed blocks of php and html.
