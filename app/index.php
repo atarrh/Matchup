@@ -7,6 +7,7 @@ session_start();
 // Initialize the client across stages of authorization; insert data from
 // Google developer console
 include("../client.php");
+include("functions.php");
 
 $logout_url = 'http://' . $_SERVER['HTTP_HOST'] . '/~atarrh/Matchup/app/logout.php';
 $consent_url = 'http://' . $_SERVER['HTTP_HOST'] . '/~atarrh/Matchup/app/consent.php';
@@ -18,24 +19,21 @@ if (isset($_SESSION['access_token']) && $_SESSION['access_token']) {
     header('Location: ' . filter_var($logout_url, FILTER_SANITIZE_URL));
 }
 
-
 // Important code            
 $service = new Google_Service_Calendar($client);
 $calendar = $service->calendars->get('primary');
 $email = $calendar->getSummary();
 
 // Database crap to test if a user was on the waiting list
-include("debug.php");
 include("connect.php");
 $query = "SELECT * FROM waiting WHERE other_email = '$email';";
 $query_waiting = mysql_query($query);
-
 
 // Was testing to see how to test if value exists in table
 // If a user is being waited on, redirect them to the consent page!
 if (!(mysql_num_rows($query_waiting) == 0)) {
     header('Location: ' . filter_var($consent_url, FILTER_SANITIZE_URL));
-    // die("query was nonzero");
+    // die("You are being waited on!");
 } 
 
 if (!mysql_close($dbhandle)) {
@@ -116,15 +114,15 @@ if (!mysql_close($dbhandle)) {
                     // Commented out the query for now, to reduce clutter
                     $query_user = mysql_query($query);
 
-
+                    // Handling inserting into waiting table
                     echo "<ul>";
                     foreach ($others as $other) {
                         // Adds domain to emails that do not contain it.
                         if (!strpos($other, '@')) {
                             $other = $other . "@gmail.com";
                         }
-                        $query = "INSERT INTO waiting (user_email, other_email, consent, rejected) " .
-                            "VALUES ( '$email', '$other', false, false )";
+                        $query = "INSERT INTO waiting (user_email, other_email, request_date, consent, rejected) " .
+                            "VALUES ( '$email', '$other', '$day', false, false )";
                         $query_waiting = mysql_query($query);
                         if ($query_waiting) {
                             echo "<li>Other is $other</li>";
@@ -136,13 +134,6 @@ if (!mysql_close($dbhandle)) {
 
                     // echo "<p>event_list is of type " . gettype($event_list->getItems()) . "...</p>";
                     // echo "<p>Length of event_list: " . sizeof($event_list->getItems()) . "...</p>";
-                    include("connect.php");
-
-                    $uid = uniqid(true);
-                    $query = "INSERT INTO users (user_uid, user_email) " .
-                                "VALUES ( '$uid', '$email' )";
-                    // Commented out the query for now, to reduce clutter
-                    $query_user = mysql_query($query);
 
                     // Debugging query strings - turns out you need quotes
                     // around your variables....
@@ -159,58 +150,8 @@ if (!mysql_close($dbhandle)) {
                     // }
 
                     $events = $event_list->getItems();
-                    if (sizeof($events) === 0) {
-                        echo "<h3>You have no events on $day !!</h3>";
-                    } else {
 
-                        echo "<h3>Your events on $day are:</h3>";
-                        echo "<ul>";
-
-                        // Why am I looping? I don't know!
-                        while(true) {
-                            foreach ($event_list->getItems() as $event) {
-                                // print_funcs($event->getStart());
-
-                                // Note to self: do not use getDate(). This
-                                // returns null, or some such.
-                                //$ev_start = new DateTime($event->getStart()->getDate());
-
-                                $ev_name = $event->getSummary();
-                                $ev_start = new DateTime($event->getStart()->getDateTime());
-                                $ev_end = new DateTime($event->getEnd()->getDateTime());
-                                $ev_start_str = $ev_start->format('Y-m-d H:i:s');
-                                $ev_end_str = $ev_end->format('Y-m-d H:i:s');
-
-                                $query = "INSERT INTO events (user_uid, event_name, starttime, endtime)".
-                                         "VALUES ( '$uid', '$ev_name', '$ev_start_str', '$ev_end_str' )";
-                                $query_event = mysql_query($query);
-
-                                if (!$query_event) {
-                                    echo "<p>failed to insert event $ev_name!!!</p>";
-                                    echo mysql_error();
-                                }
-
-
-                                $ev_start_str = $ev_start->format('H:i');
-                                $ev_end_str = $ev_end->format('H:i');
-
-                               // Echo relevant event information to the page
-                                echo "<li> $ev_name ( $ev_start_str - $ev_end_str )</li>";
-
-                            }
-                            
-                            // No idea what this stuff does
-                            $pageToken = $event_list->getNextPageToken();
-                            if ($pageToken) {
-                                $optParams = array('pageToken' => $pageToken);
-                                $event_list = $service->events->listEvents('primary', $optParams);
-                            } else {
-                                break;
-                            }
-                        }
-                        echo "</ul>";
-                    }
-
+                    get_events($events, $event_list, $day, $email);
 
                     // print_funcs($event_list);
                     if (mysql_close($dbhandle)) {
@@ -221,7 +162,8 @@ if (!mysql_close($dbhandle)) {
                     ?>
 
             <!-- temporarily redirects to logout!!! -->
-            <form action='./logout.php' method='POST'>
+            <!-- should it go to waiting? ==> yes! -->
+            <form action='./waiting.php' method='POST'>
             <table>
               <tr>
                 <td>What time would you like to meet?</td>
@@ -233,6 +175,7 @@ if (!mysql_close($dbhandle)) {
                 <td><input type='submit' name='submit' value='submit' /></td>
               </tr>
             </table>
+            <input type="hidden" name="day" value="<?php echo $day; ?>">
             </form>
 
             <?php
