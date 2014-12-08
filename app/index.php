@@ -17,7 +17,6 @@ if (isset($_SESSION['access_token']) && $_SESSION['access_token']) {
 } else {
     header('Location: ' . filter_var($logout_url, FILTER_SANITIZE_URL));
 }
-<<<<<<< HEAD
 
 
 // Important code            
@@ -48,9 +47,6 @@ if (mysql_close($dbhandle)) {
 }
  
 
-=======
->>>>>>> a66f0aae62f39f80f0a0ade52c190139e932290f
- 
 ?>
 
 
@@ -81,15 +77,6 @@ if (mysql_close($dbhandle)) {
 
                 echo "<a href= $logout_url >Click here to logout of Matchup!!!</a>";
 
-<<<<<<< HEAD
-                // Print the primary calendar title to make sure we're not crazy
-                echo "<h3>Primary calendar title: $email</h3>";
-
-                // print_funcs($query_waiting);
-                // if ($query_waiting === NULL) {
-                //     echo "something";
-                // }
-=======
                 // Important code            
                 $service  = new Google_Service_Calendar($client);
                 $calendar = $service->calendars->get('primary');
@@ -97,7 +84,6 @@ if (mysql_close($dbhandle)) {
 
                 // Print the primary calendar title to make sure we're not crazy
                 echo "<h3>Primary calendar title: $email</h3>";
->>>>>>> a66f0aae62f39f80f0a0ade52c190139e932290f
 
                 // echo "<p>type: " . gettype($someStr) . "; length: " . strlen($someStr) . "</p>";
                 // var_dump($_POST);
@@ -129,7 +115,6 @@ if (mysql_close($dbhandle)) {
                                     'timeMin' => $minTime->format(DateTime::ATOM));
                     $event_list = $service->events->listEvents('primary', $params);
 
-<<<<<<< HEAD
                     // echo "<p>event_list is of type " . gettype($event_list->getItems()) . "...</p>";
                     // echo "<p>Length of event_list: " . sizeof($event_list->getItems()) . "...</p>";
 
@@ -161,7 +146,6 @@ if (mysql_close($dbhandle)) {
                     }
                     echo "</ul>";
 
-=======
                     echo "<p>event_list is of type " . gettype($event_list->getItems()) . "...</p>";
                     echo "<p>Length of event_list: " . sizeof($event_list->getItems()) . "...</p>";
                     include("connect.php");
@@ -170,7 +154,6 @@ if (mysql_close($dbhandle)) {
                     $query = "INSERT INTO users (id, email) VALUES ( '$uid', '$email' )";
                     // Commented out the query for now, to reduce clutter
                     // $query_user = mysql_query($query);
->>>>>>> a66f0aae62f39f80f0a0ade52c190139e932290f
 
                     // Debugging query strings - turns out you need quotes
                     // around your variables....
@@ -186,10 +169,6 @@ if (mysql_close($dbhandle)) {
                     //     echo "<p>un is $email</p>";
                     // }
 
-<<<<<<< HEAD
-=======
-                    include("debug.php");
->>>>>>> a66f0aae62f39f80f0a0ade52c190139e932290f
                     $events = $event_list->getItems();
                     if (sizeof($events) === 0) {
                         echo "<h3>You have no events on $day !!</h3>";
@@ -207,7 +186,6 @@ if (mysql_close($dbhandle)) {
                                 // returns null, or some such.
                                 //$ev_start = new DateTime($event->getStart()->getDate());
 
-<<<<<<< HEAD
                                 $ev_name = $event->getSummary();
                                 $ev_start = new DateTime($event->getStart()->getDateTime());
                                 $ev_end = new DateTime($event->getEnd()->getDateTime());
@@ -223,26 +201,12 @@ if (mysql_close($dbhandle)) {
                                 }
 
 
-
-
                                 $ev_start_str = $ev_start->format('H:i');
                                 $ev_end_str = $ev_end->format('H:i');
 
                                // Echo relevant event information to the page
                                 echo "<li> $ev_name ( $ev_start_str - $ev_end_str )</li>";
-=======
 
-                                // $query = "INSERT INTO events (id, name, starttime, endtime)" . 
-                                //          "VALUES ( '$uid', '$event_name', '$ev_start', '$ev_end' )";
-
-                                $ev_start = new DateTime($event->getStart()->getDateTime());
-                                $ev_end = new DateTime($event->getEnd()->getDateTime());
-                                $ev_start_str = $ev_start->format('H:i');
-                                $ev_end_str = $ev_end->format('H:i');
-
-                                // Echo relevant event information to the page
-                                echo "<li> " . $event->getSummary() . " ( $ev_start_str - $ev_end_str )</li>";
->>>>>>> a66f0aae62f39f80f0a0ade52c190139e932290f
                             }
                             
                             // No idea what this stuff does
@@ -255,7 +219,6 @@ if (mysql_close($dbhandle)) {
                             }
                         }
                         echo "</ul>";
-<<<<<<< HEAD
                     }
 
 
@@ -283,18 +246,8 @@ if (mysql_close($dbhandle)) {
             </form>
 
             <?php
-=======
 
                     }
-
-
-                    if (mysql_close($dbhandle)) {
-                        echo "<p>Database successfully closed~</p>";
-                    }
-                    echo "<p>Please choose a time to meet up!</p>";
-
-                    // print_funcs($event_list);
->>>>>>> a66f0aae62f39f80f0a0ade52c190139e932290f
 
                 } else {
                     // Silly hack; use mixed blocks of php and html.

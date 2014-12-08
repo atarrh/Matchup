@@ -13,7 +13,6 @@ function print_funcs($obj)
     echo "</ul>";
 }
 
-<<<<<<< HEAD
 function clear_db()
 {
     include('connect.php');
@@ -27,6 +26,4 @@ function clear_db()
 
 
 
-=======
->>>>>>> a66f0aae62f39f80f0a0ade52c190139e932290f
 ?>
