@@ -4,27 +4,40 @@ include('set_environment.php');
 
 // Database crap to test if a user was on the waiting list
 include("connect.php");
-$query = "SELECT * FROM waiting WHERE other_email = '$email';";
-$query_waiting = mysql_query($query);
+$query = "SELECT * FROM waiting WHERE " .
+        "(other_email = '$email' AND accepted = false);";
+$query_waiting_other = mysql_query($query);
+
+$query = "SELECT * FROM waiting WHERE " .
+        "(user_email = '$email' AND accepted = true);";
+$query_waiting_user = mysql_query($query);
+
 
 // Was testing to see how to test if value exists in table
 // If a user is NOT being waited on, redirect them to the logout
 // page posthaste!
-if (mysql_num_rows($query_waiting) == 0) {
-    die("Nobody was waiting on you!");
+if (mysql_num_rows($query_waiting_other) == 0) {
+    if (mysql_num_rows($query_waiting_user) == 0) {
+        die("Nobody was waiting on you!");
+    } else if (mysql_num_rows($query_waiting_user) > 1) {
+        die("Not ready for multiple requests yet...");
+    }
     // header('Location: ' . filter_var($logout_url, FILTER_SANITIZE_URL));
-} else if (mysql_num_rows($query_waiting) > 1) {
+
+    $row = mysql_fetch_array( $query_waiting_user );
+    $result = get_data($row);
+
+} else if (mysql_num_rows($query_waiting_other) > 1) {
     die("More than one user waiting on you! Don't know how.");
+} else {
+
+    $row = mysql_fetch_array( $query_waiting_other );
+    $result = get_data($row);
+    
 }
 
-$row = mysql_fetch_array( $query_waiting );
-$user = $row['user_email'];
-$length = split(":", $row['request_length']);
-$request_date = new DateTime($row['request_date']);
-$day = $request_date->format('Y/m/d');
-
-if (mysql_close($dbhandle)) {
-    // echo "<p>Database successfully closed~</p>";
+if (!mysql_close($dbhandle)) {
+    die("Could not successfully close db!");
 }
 
 ?>
@@ -42,6 +55,7 @@ if (mysql_close($dbhandle)) {
         echo "<h1>Matchup app - Consent page</h1>";
 
         if (!isset($_POST['submit'])) {
+            $user = $result['user'];
             echo "<h3>Do you want to grant $user permission to schedule a meeting?</h3>";
 
             ?>
@@ -66,7 +80,12 @@ if (mysql_close($dbhandle)) {
             include("connect.php");
 
             if ($consent == 'yes') {
-               
+
+                $day = $result['day'];
+                $email = $result['email']; 
+                $suggested_start = $result['suggested_start'];
+                $suggested_end = $result['suggested_end'];
+
                 // Then yank events and insert into DB
                 echo "<p>now must insert events into db</p>";
 
@@ -81,10 +100,11 @@ if (mysql_close($dbhandle)) {
                 $events = $event_list->getItems();
                 get_events($events, $event_list, $day, $email);
 
-                $suggested_start = $request_date->format('Y/m/d H:i:s');
-                $duration = new DateInterval('PT' . $length[0] . 'H' . $length[1] . 'M' . $length[2] . 'S');
-                $request_date->add($duration);
-                $suggested_end = $request_date->format('Y/m/d H:i:s');
+                // $suggested_start = $request_date->format('Y/m/d H:i:s');
+                // $duration = new DateInterval('PT' . $length[0] . 'H' . $length[1] . 'M' . $length[2] . 'S');
+                // $request_date->add($duration);
+                // $suggested_end = $request_date->format('Y/m/d H:i:s');
+
                 echo "<h2>$user suggested meeting from $suggested_start 'till $suggested_end.</h2>";
 
                 $query = "SELECT * FROM events WHERE (user_email='$email' " .

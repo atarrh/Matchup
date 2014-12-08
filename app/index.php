@@ -13,6 +13,42 @@ if (!(mysql_num_rows($query_waiting) == 0)) {
     header('Location: ' . filter_var($consent_url, FILTER_SANITIZE_URL));
 } 
 
+$query = "SELECT * FROM waiting WHERE user_email = '$email';";
+$query_waiting = mysql_query($query);
+if(!(mysql_num_rows($query_waiting) == 0)) {
+    $row = mysql_fetch_array($query_waiting);
+    $acceptance = $row['accepted'];
+
+    if ($acceptance) {
+
+        $result = get_data($row);
+
+        $suggested_start = $result['suggested_start'];
+        $suggested_end = $result['suggested_end'];
+
+        echo "<h2>Your friend has accepted your Matchup Request!</h2>";
+        echo "<h3>Please select below if you'd like to add an event to your calendar!</h3>";
+
+        ?>
+        <!-- Insert stupid simple form here -->
+        <form action='success.php' method='POST'>
+            <input type='radio' name='success' value='yes' checked />
+                <label for = 'yes'>yes</label>
+            <input type='radio' name='success' value='no' />
+                <label for = 'no'>no</label>
+            <input type='submit' name='submit' value='submit' />
+            <input type='hidden' name='start' value="<?php echo $suggested_start; ?>">
+            <input type='hidden' name='end' value="<?php echo $suggested_end; ?>">
+        </form>
+
+        <?php
+
+        exit();
+
+    } 
+}
+
+
 if (!mysql_close($dbhandle)) {
     die("Database could not be successfully closed");
 }
@@ -60,9 +96,6 @@ if (!mysql_close($dbhandle)) {
                     $minTime = new DateTime($day . " 00:00:00");
                     $maxTime = new DateTime($day . " 23:59:59");
 
-                    // $minTimeString = $minTime->format(DateTime::ATOM);
-                    // $maxTimeString = $maxTime->format(DateTime::ATOM);
-
                     // These are bad! date() returns current date/time
                     // $test1 = date($minTime::ATOM);
                     // $test2 = date($maxTime::ATOM);
@@ -76,9 +109,6 @@ if (!mysql_close($dbhandle)) {
                                     'timeMax' => $maxTime->format(DateTime::ATOM),
                                     'timeMin' => $minTime->format(DateTime::ATOM));
                     $event_list = $service->events->listEvents('primary', $params);
-
-                    // echo "<p>event_list is of type " . gettype($event_list->getItems()) . "...</p>";
-                    // echo "<p>Length of event_list: " . sizeof($event_list->getItems()) . "...</p>";
 
 
                     // Connect to the database
@@ -99,37 +129,12 @@ if (!mysql_close($dbhandle)) {
                             $others[$i] = $other . "@gmail.com";
                         }
 
-                        echo "<li>Other is $other</li>";
+                        echo "<li>Collaborator: $other</li>";
 
-                        // $query = "INSERT INTO waiting (user_email, other_email, request_date, consent, rejected) " .
-                        //     "VALUES ( '$email', '$other', '$day', false, false )";
-                        // $query_waiting = mysql_query($query);
-                        // if ($query_waiting) {
-                        // } else {
-                        //     echo mysql_error();
-                        // }
                     }
                     echo "</ul>";
                     $others = implode(",", $others);
 
-
-
-                    // echo "<p>event_list is of type " . gettype($event_list->getItems()) . "...</p>";
-                    // echo "<p>Length of event_list: " . sizeof($event_list->getItems()) . "...</p>";
-
-                    // Debugging query strings - turns out you need quotes
-                    // around your variables....
-                    // if ($query_user) {
-                    //     echo "<p>Successfully inserted into db</p>";
-                    //     echo "<p>On query $query</p>";
-                    // } else {
-                    //     $fart = mysql_error();
-                    //     echo "<p>Couldn't insert into db</p>";
-                    //     echo "<p>Error: $fart</p>";
-                    //     echo "<p>on query: $query</p>";
-                    //     echo "<p>uid is $uid</p>";
-                    //     echo "<p>un is $email</p>";
-                    // }
 
                     $events = $event_list->getItems();
 
@@ -141,11 +146,12 @@ if (!mysql_close($dbhandle)) {
                     }
                     
                     echo "<h3>Please choose a time to meet up!</h3>";
+                    echo "<p>(on $day with $others)</p>";
+
                     ?>
 
-            <!-- temporarily redirects to logout!!! -->
             <!-- should it go to waiting? ==> yes! -->
-            <form action='./waiting.php' method='POST'>
+            <form action='waiting.php' method='POST'>
             <table>
               <tr>
                 <td>What time would you like to meet?</td>

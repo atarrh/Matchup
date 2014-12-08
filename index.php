@@ -54,8 +54,8 @@ $redirect_url = 'http://' . $_SERVER['HTTP_HOST'] . '/~atarrh/Matchup/app/index.
                 $authUrl = $client->createAuthUrl();
                 echo "<a href= $authUrl >Click here to login to google</a>";
                 
-                $token = $_SESSION['access_token'];
-                echo "<p>$token</p>";
+                // $token = $_SESSION['access_token'];
+                // echo "<p>$token</p>";
             }
             
             ?>

@@ -11,20 +11,22 @@ if (isset($_POST['submit'])) {
     $date = $day . " " . $time;
     $others = explode(",", $_POST['other']);
 
-
-
     include("connect.php");
 
+    echo "<ul>";
     foreach ($others as $other) {
 
-        $query = "INSERT INTO waiting (user_email, other_email, request_date, request_length, consent, rejected) " .
+        // echo "<li>Inserting $other into the shindig</li>";
+        $query = "INSERT INTO waiting (user_email, other_email, request_date, request_length, accepted, rejected) " .
                 "VALUES ( '$email', '$other', '$date', '$length', false, false )";
         $query_insert = mysql_query($query);
 
-        if (!query_insert) {
-            die("Could not insert waiting event!");
+        if (!$query_insert) {
+            // die("Could not insert waiting event!");
+            die(mysql_error());
         }
     }
+    echo "</ul>";
     // $query = "SELECT * FROM waiting WHERE other_email='$email';";
     // $query1 = "UPDATE waiting SET request_date='$date' WHERE user_email='$email';";
     // $query2 = "UPDATE waiting SET request_length='$length' WHERE user_email='$email';";
