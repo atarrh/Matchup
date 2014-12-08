@@ -13,4 +13,17 @@ function print_funcs($obj)
     echo "</ul>";
 }
 
+function clear_db()
+{
+    include('connect.php');
+    if (mysql_query("DELETE FROM users;") and
+        mysql_query("DELETE FROM waiting;") and
+        mysql_query("DELETE FROM events;")) {
+        echo "<h2>All tables cleared!</h2>";
+    }
+    mysql_close($dbhandle);
+}
+
+
+
 ?>
